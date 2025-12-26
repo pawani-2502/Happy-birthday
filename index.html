@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Birthday Love 💖</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: linear-gradient(180deg, #071026, #0f1724);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        canvas {
+            width: 1280px;
+            height: 720px;
+            border-radius: 18px;
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.6);
+        }
+
+        button {
+            margin-top: 18px;
+            padding: 12px 36px;
+            border-radius: 30px;
+            border: none;
+            font-weight: bold;
+            font-size: 16px;
+            background: linear-gradient(90deg, #ff9ccf, #ffc1a6);
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+    <canvas id="c" width="1280" height="720"></canvas>
+    <button id="nextBtn">Next ➜</button>
+
+    <script>
+        /* =====================
+           EDIT NAME HERE 💖
+        ===================== */
+        const NAME = "Love";
+        /* ===================== */
+
+        const canvas = document.getElementById("c");
+        const ctx = canvas.getContext("2d");
+        const W = canvas.width, H = canvas.height;
+
+        let slideIndex = 0;
+        let slideStart = performance.now();
+        let sparkles = [];
+        let charIndex = 0;
+
+        /* ---------- Utilities ---------- */
+        function rand(a, b) { return a + Math.random() * (b - a); }
+
+        /* ---------- Sparkles ---------- */
+        function spawnSparkle() {
+            sparkles.push({
+                x: rand(0, W),
+                y: H + 20,
+                vy: rand(0.4, 1.2),
+                size: rand(1.5, 3.5),
+                alpha: 1,
+                hue: rand(280, 340)
+            });
+        }
+        for (let i = 0; i < 140; i++) spawnSparkle();
+
+        /* ---------- Slides Text ---------- */
+       const slides = [
+            [`Happy Birthday`, ` ${NAME} 💖`],
+            [`You make my world`, `brighter every day ✨`],
+            [` I need you the way`, `the ocean tides need the moon💕`],
+            [`and i would do anything`, `for you to feel  🌸`],
+            [`the same way `, `for me💗`],
+            [`UIIYAAAA PAPAPA`, `HMMMMMMMMM 😌`]
+        ];
+        /* ---------- First Slide (SPECIAL) ---------- */
+        function drawIntroSlide(lines) {
+            const t = (performance.now() - slideStart) / 1000;
+            const p = Math.min(t / 1.6, 1);
+            const pulse = 1 + Math.sin(t * 2) * 0.015;
+
+            ctx.save();
+            ctx.translate(W / 2, H / 2);
+            ctx.scale(pulse, pulse);
+            ctx.globalAlpha = p;
+
+            // Gradient text
+            const grad = ctx.createLinearGradient(-300, 0, 300, 0);
+            grad.addColorStop(0, "#ff8fcf");
+            grad.addColorStop(1, "#ffd1a8");
+            ctx.fillStyle = grad;
+
+            ctx.textAlign = "center";
+            ctx.shadowColor = "rgba(255,180,220,0.9)";
+            ctx.shadowBlur = 70;
+
+            ctx.font = "110px 'Special Elite'";
+            ctx.fillText(lines[0], 0, -40);
+
+            ctx.font = "95px 'Special Elite'";
+            ctx.fillText(lines[1], 0, 90);
+
+            ctx.restore();
+        }
+
+        /* ---------- Normal Typewriter Slides ---------- */
+        function drawTypewriter(lines) {
+            const elapsed = (performance.now() - slideStart) / 1000;
+            const speed = 22;
+            charIndex = Math.min(Math.floor(elapsed * speed), lines.join("").length);
+
+            ctx.save();
+            ctx.translate(W / 2, H / 2);
+            ctx.textAlign = "center";
+            ctx.fillStyle = "#8B4252";
+            ctx.shadowColor = "rgba(255,200,230,0.8)";
+            ctx.shadowBlur = 45;
+
+            let drawn = 0;
+            lines.forEach((line, i) => {
+                ctx.font = `${80 - i * 10}px 'Special Elite'`;
+                const part = line.substring(0, Math.max(0, charIndex - drawn));
+                ctx.fillText(part, 0, i * 95);
+                drawn += line.length;
+            });
+
+            // cursor
+            if (Math.floor(elapsed * 2) % 2 === 0) {
+                ctx.font = "60px 'Special Elite'";
+                ctx.fillText("|", 0, lines.length * 95);
+            }
+
+            ctx.restore();
+        }
+
+        /* ---------- Draw Loop ---------- */
+        function draw() {
+            const bg = ctx.createLinearGradient(0, 0, 0, H);
+            bg.addColorStop(0, "#c7eaff");
+            bg.addColorStop(1, "#ffd6f7");
+            ctx.fillStyle = bg;
+            ctx.fillRect(0, 0, W, H);
+
+            sparkles.forEach(s => {
+                s.y -= s.vy;
+                s.alpha -= 0.0012;
+                ctx.globalAlpha = s.alpha;
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+                ctx.fillStyle = `hsl(${s.hue},80%,75%)`;
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+
+            sparkles = sparkles.filter(s => s.y > -20 && s.alpha > 0.05);
+            if (Math.random() < 0.5) spawnSparkle();
+
+            if (slideIndex === 0) {
+                drawIntroSlide(slides[0]);
+            } else {
+                drawTypewriter(slides[slideIndex]);
+            }
+
+            requestAnimationFrame(draw);
+        }
+
+        /* ---------- Button ---------- */
+        document.getElementById("nextBtn").onclick = () => {
+            slideIndex = (slideIndex + 1) % slides.length;
+            slideStart = performance.now();
+            charIndex = 0;
+        };
+
+        draw();
+    </script>
+
+</body>
+
+</html>
